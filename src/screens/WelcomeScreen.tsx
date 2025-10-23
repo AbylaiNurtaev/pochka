@@ -42,12 +42,7 @@ export default function WelcomeScreen({ navigation }: Props) {
   return (
     <ImageBackground source={require('../../assets/splash-icon.png')} style={styles.container} imageStyle={styles.bgImg}>
       <View style={styles.center}>
-        <View style={styles.modelContainer}>
-          <View style={styles.kidneyModel}>
-            <Text style={styles.modelText}>3D</Text>
-            <Text style={styles.modelSubtext}>Kidney Model</Text>
-          </View>
-        </View>
+
 
         <Animated.Text
           entering={ZoomIn.duration(450)}
@@ -81,13 +76,13 @@ export default function WelcomeScreen({ navigation }: Props) {
           </Pressable>
           <Text style={styles.agreementText}>
             {t('agreeTo')}{' '}
-            <Pressable onPress={() => navigation.navigate('Terms')}>
-              <Text style={styles.link}>{t('terms')}</Text>
-            </Pressable>
+            <Text style={styles.link} onPress={() => navigation.navigate('Terms')}>
+              {t('terms')}
+            </Text>
             {' '}{t('and')}{' '}
-            <Pressable onPress={() => navigation.navigate('Privacy')}>
-              <Text style={styles.link}>{t('privacyPolicy')}</Text>
-            </Pressable>
+            <Text style={styles.link} onPress={() => navigation.navigate('Privacy')}>
+              {t('privacyPolicy')}
+            </Text>
           </Text>
         </View>
 
@@ -153,7 +148,7 @@ const styles = StyleSheet.create({
   checkboxChecked: { backgroundColor: '#06a8f9', borderColor: '#06a8f9' },
   checkmark: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
   agreementText: { flex: 1, fontSize: 14, color: '#9ca3af', lineHeight: 20 },
-  link: { color: '#06a8f9', fontWeight: '600' },
+  link: { color: '#06a8f9', fontWeight: '600', textDecorationLine: 'underline' },
   continueButton: { width: '100%', height: 56, borderRadius: 16, overflow: 'hidden' },
   continueButtonDisabled: { opacity: 0.5 },
   gradient: { flex: 1, alignItems: 'center', justifyContent: 'center' },
