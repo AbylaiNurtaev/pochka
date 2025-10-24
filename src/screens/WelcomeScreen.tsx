@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ImageBackground } from 'react-native';
-import Animated, { ZoomIn, ZoomOut, useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import Animated, { ZoomIn, ZoomOut, useSharedValue, useAnimatedStyle, withSpring, withTiming, interpolateColor } from 'react-native-reanimated';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 import { useLanguage, Language } from '../contexts/LanguageContext';
@@ -19,8 +19,11 @@ export default function WelcomeScreen({ navigation }: Props) {
   const [greetingIndex, setGreetingIndex] = useState(0);
   const [isAgreed, setIsAgreed] = useState(false);
   const scale = useSharedValue(1);
+  const checkboxScale = useSharedValue(1);
+  const checkboxProgress = useSharedValue(0);
+  const languageScale = useSharedValue(1);
 
-  const greetings = useMemo(() => [t('welcome'), 'Hello', 'Привет', 'Сәлем'], [t]);
+  const greetings = useMemo(() => ['Hello', 'Привет', 'Сәлем'], [t]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -31,6 +34,26 @@ export default function WelcomeScreen({ navigation }: Props) {
 
   const animatedButtonStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
+    // Оборачиваем View вокруг Pressable, чтобы применить трансформацию
+    width: '90%', // Применяем 90% к анимированному контейнеру
+  }));
+
+  const animatedCheckboxStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: checkboxScale.value }],
+    backgroundColor: interpolateColor(
+      checkboxProgress.value,
+      [0, 1],
+      ['transparent', '#06a8f9']
+    ),
+    borderColor: interpolateColor(
+      checkboxProgress.value,
+      [0, 1],
+      ['#6b7280', '#06a8f9']
+    ),
+  }));
+
+  const animatedLanguageStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: languageScale.value }],
   }));
 
   const handleContinue = () => {
@@ -39,15 +62,27 @@ export default function WelcomeScreen({ navigation }: Props) {
     navigation.navigate('Survey');
   };
 
+  const handleCheckboxPress = () => {
+    const newValue = !isAgreed;
+    setIsAgreed(newValue);
+    
+    checkboxScale.value = withSpring(0.9, {}, () => {
+      checkboxScale.value = withSpring(1);
+    });
+    
+    checkboxProgress.value = withTiming(newValue ? 1 : 0, { duration: 300 });
+  };
+
+  const handleLanguagePress = (key: Language) => {
+    languageScale.value = withSpring(0.95, {}, () => {
+      languageScale.value = withSpring(1);
+    });
+    setLanguage(key);
+  };
+
   return (
     <ImageBackground source={require('../../assets/splash-icon.png')} style={styles.container} imageStyle={styles.bgImg}>
       <View style={styles.center}>
-        <View style={styles.modelContainer}>
-          <View style={styles.kidneyModel}>
-            <Text style={styles.modelText}>3D</Text>
-            <Text style={styles.modelSubtext}>Kidney Model</Text>
-          </View>
-        </View>
 
         <Animated.Text
           entering={ZoomIn.duration(450)}
@@ -62,35 +97,60 @@ export default function WelcomeScreen({ navigation }: Props) {
           {Object.entries(languages).map(([key, lang]) => (
             <Pressable
               key={key}
-              style={[styles.langButton, language === key && styles.langButtonActive]}
-              onPress={() => setLanguage(key as Language)}
+              onPress={() => handleLanguagePress(key as Language)}
             >
-              <Text style={styles.langFlag}>{lang.flag}</Text>
-              <Text style={[styles.langText, language === key && styles.langTextActive]}>
-                {lang.name}
-              </Text>
+              <Animated.View style={animatedLanguageStyle}>
+                <View
+                  style={[styles.langButton, language === key && styles.langButtonActive]}
+                >
+                  <Text style={styles.langFlag}>{lang.flag}</Text>
+                  <Text style={[styles.langText, language === key && styles.langTextActive]}>
+                    {lang.name}
+                  </Text>
+                </View>
+              </Animated.View>
             </Pressable>
           ))}
         </View>
 
         <View style={styles.agreement}>
-          <Pressable style={styles.checkbox} onPress={() => setIsAgreed(!isAgreed)}>
-            <View style={[styles.checkboxInner, isAgreed && styles.checkboxChecked]}>
-              {isAgreed && <Text style={styles.checkmark}>✓</Text>}
-            </View>
+          <Pressable style={styles.checkbox} onPress={handleCheckboxPress}>
+            <Animated.View style={[styles.checkboxInner, animatedCheckboxStyle]}>
+              {isAgreed && (
+                <Animated.Text 
+                  entering={ZoomIn.duration(200)}
+                  exiting={ZoomOut.duration(200)}
+                  style={styles.checkmark}
+                >
+                  ✓
+                </Animated.Text>
+              )}
+            </Animated.View>
           </Pressable>
           <Text style={styles.agreementText}>
             {t('agreeTo')}{' '}
-            <Pressable onPress={() => navigation.navigate('Terms')}>
-              <Text style={styles.link}>{t('terms')}</Text>
-            </Pressable>
+            {/* Оборачиваем синий текст в отдельный Text для корректного выравнивания */}
+            <Text>
+              <Text 
+                onPress={() => navigation.navigate('Terms')}
+                style={styles.link}
+              >
+                {t('terms')}
+              </Text>
+            </Text>
             {' '}{t('and')}{' '}
-            <Pressable onPress={() => navigation.navigate('Privacy')}>
-              <Text style={styles.link}>{t('privacyPolicy')}</Text>
-            </Pressable>
+            <Text>
+              <Text 
+                onPress={() => navigation.navigate('Privacy')}
+                style={styles.link}
+              >
+                {t('privacyPolicy')}
+              </Text>
+            </Text>
           </Text>
         </View>
 
+        {/* Применяем 90% ширины и стили кнопки здесь */}
         <Animated.View style={animatedButtonStyle}>
           <Pressable
             style={[styles.continueButton, !isAgreed && styles.continueButtonDisabled]}
@@ -98,7 +158,7 @@ export default function WelcomeScreen({ navigation }: Props) {
             disabled={!isAgreed}
           >
             <LinearGradient
-              colors={isAgreed ? ['#10b981', '#059669'] : ['#6b7280', '#4b5563']}
+              colors={isAgreed ? ['#00A86B', '#008F5A', '#0284C7'] : ['#6b7280', '#4b5563']}
               style={styles.gradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
@@ -117,23 +177,7 @@ export default function WelcomeScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a' },
   bgImg: { opacity: 0.15, resizeMode: 'cover' },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 },
-  modelContainer: { marginBottom: 32, alignItems: 'center', justifyContent: 'center' },
-  kidneyModel: { 
-    width: 200, 
-    height: 200, 
-    backgroundColor: '#06a8f9', 
-    borderRadius: 100, 
-    alignItems: 'center', 
-    justifyContent: 'center',
-    shadowColor: '#06a8f9',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  modelText: { color: 'white', fontSize: 24, fontWeight: 'bold' },
-  modelSubtext: { color: 'white', fontSize: 12, marginTop: 4 },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }, 
   title: { fontSize: 44, fontWeight: '800', color: '#fff', marginBottom: 24 },
   langRow: {
     flexDirection: 'row',
@@ -147,16 +191,28 @@ const styles = StyleSheet.create({
   langFlag: { fontSize: 20, marginRight: 8 },
   langText: { fontSize: 14, color: '#9ca3af', fontWeight: '500' },
   langTextActive: { color: '#06a8f9', fontWeight: '600' },
-  agreement: { flexDirection: 'row', alignItems: 'center', marginBottom: 24, paddingHorizontal: 16 },
-  checkbox: { marginRight: 12 },
+  agreement: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 24, paddingHorizontal: 16 },
+  checkbox: { marginRight: 12, marginTop: 2 },
   checkboxInner: { width: 20, height: 20, borderRadius: 4, borderWidth: 2, borderColor: '#6b7280', alignItems: 'center', justifyContent: 'center' },
   checkboxChecked: { backgroundColor: '#06a8f9', borderColor: '#06a8f9' },
   checkmark: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
+  // 1. Устанавливаем line-height для корректного выравнивания
   agreementText: { flex: 1, fontSize: 14, color: '#9ca3af', lineHeight: 20 },
-  link: { color: '#06a8f9', fontWeight: '600' },
-  continueButton: { width: '100%', height: 56, borderRadius: 16, overflow: 'hidden' },
+  // 2. Дополнительно устанавливаем verticalAlign для синего текста (работает внутри Text)
+  link: { color: '#06a8f9', fontWeight: '600', verticalAlign: 'top' },
+  continueButton: { 
+    // width: '100%', // Теперь 90% управляется родительским Animated.View
+    height: 60, 
+    borderRadius: 20, 
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 10,
+  },
   continueButtonDisabled: { opacity: 0.5 },
   gradient: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  continueText: { fontSize: 16, fontWeight: '700', color: '#ffffff' },
+  continueText: { fontSize: 20, fontWeight: '800', color: '#ffffff' },
   continueTextDisabled: { color: '#9ca3af' },
 });

@@ -30,10 +30,10 @@ export default function App() {
     </LanguageProvider>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0a0a0a',
   },
 });
+
