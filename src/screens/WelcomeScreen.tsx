@@ -129,23 +129,12 @@ export default function WelcomeScreen({ navigation }: Props) {
           </Pressable>
           <Text style={styles.agreementText}>
             {t('agreeTo')}{' '}
-            {/* Оборачиваем синий текст в отдельный Text для корректного выравнивания */}
-            <Text>
-              <Text 
-                onPress={() => navigation.navigate('Terms')}
-                style={styles.link}
-              >
-                {t('terms')}
-              </Text>
+            <Text style={styles.link} onPress={() => navigation.navigate('Terms')}>
+              {t('terms')}
             </Text>
             {' '}{t('and')}{' '}
-            <Text>
-              <Text 
-                onPress={() => navigation.navigate('Privacy')}
-                style={styles.link}
-              >
-                {t('privacyPolicy')}
-              </Text>
+            <Text style={styles.link} onPress={() => navigation.navigate('Privacy')}>
+              {t('privacyPolicy')}
             </Text>
           </Text>
         </View>
@@ -198,10 +187,9 @@ const styles = StyleSheet.create({
   checkmark: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
   // 1. Устанавливаем line-height для корректного выравнивания
   agreementText: { flex: 1, fontSize: 14, color: '#9ca3af', lineHeight: 20 },
-  // 2. Дополнительно устанавливаем verticalAlign для синего текста (работает внутри Text)
-  link: { color: '#06a8f9', fontWeight: '600', verticalAlign: 'top' },
+  link: { color: '#06a8f9', fontWeight: '600', textDecorationLine: 'underline' },
   continueButton: { 
-    // width: '100%', // Теперь 90% управляется родительским Animated.View
+    width: '100%', // Теперь 90% управляется родительским Animated.View
     height: 60, 
     borderRadius: 20, 
     overflow: 'hidden',
