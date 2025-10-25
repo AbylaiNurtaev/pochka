@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
 // Предполагаем, что вы используете эту библиотеку для масок
 import { MaskedTextInput } from 'react-native-mask-text'; 
 import Animated, { SlideInRight, SlideOutLeft } from 'react-native-reanimated';
@@ -59,16 +59,15 @@ export const SurveyStep: React.FC<SurveyStepProps> = ({
         return (
           <Animated.View entering={SlideInRight.duration(350)} exiting={SlideOutLeft.duration(250)} style={styles.stepContent}>
             <Text style={styles.stepTitle}>{text.steps.name} 👤</Text>
-            <MaskedTextInput
-              mask={Array(50).fill('A').join('')} // Устанавливаем макс. длину и только для алфавита/чисел (A - alpha/digit)
+            <TextInput
               style={[
                 styles.input,
                 shouldShowError(1) && styles.inputError,
-                data.name && styles.inputFocused, // Визуальный эффект, если поле заполнено
+                data.name && styles.inputFocused,
               ]}
               placeholder={text.placeholders.name}
               value={data.name || ''}
-              onChangeText={(_, unmasked) => setData({ ...data, name: unmasked })}
+              onChangeText={(text) => setData({ ...data, name: text })}
               placeholderTextColor="#9CA3AF"
             />
             {shouldShowError(1) && (

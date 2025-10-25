@@ -19,10 +19,10 @@ export const SurveyHeader: React.FC<SurveyHeaderProps> = ({
   canGoBack,
   language
 }) => {
-  const progressWidth = useSharedValue((step + 1) / totalSteps * 100);
+  const progressWidth = useSharedValue(step / totalSteps * 100);
 
   React.useEffect(() => {
-    progressWidth.value = withTiming((step + 1) / totalSteps * 100, { duration: 300 });
+    progressWidth.value = withTiming(step / totalSteps * 100, { duration: 300 });
   }, [step]);
 
   const animatedProgressStyle = useAnimatedStyle(() => ({
@@ -32,11 +32,11 @@ export const SurveyHeader: React.FC<SurveyHeaderProps> = ({
   const getProgressText = () => {
     switch (language) {
       case 'kz':
-        return `Қадам ${step + 1} ішінен ${totalSteps}`;
+        return `Қадам ${step} ішінен ${totalSteps}`;
       case 'en':
-        return `Step ${step + 1} of ${totalSteps}`;
+        return `Step ${step} of ${totalSteps}`;
       default:
-        return `Шаг ${step + 1} из ${totalSteps}`;
+        return `Шаг ${step} из ${totalSteps}`;
     }
   };
 
@@ -56,9 +56,9 @@ export const SurveyHeader: React.FC<SurveyHeaderProps> = ({
         <View style={styles.progressInfo}>
           <Text style={styles.progressText}>{getProgressText()}</Text>
           <View style={styles.progressPercent}>
-            <Text style={styles.progressPercentText}>
-              {Math.round(((step + 1) / totalSteps) * 100)}%
-            </Text>
+          <Text style={styles.progressPercentText}>
+            {Math.round((step / totalSteps) * 100)}%
+          </Text>
           </View>
         </View>
       </View>

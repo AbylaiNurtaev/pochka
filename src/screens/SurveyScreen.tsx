@@ -6,7 +6,6 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { SurveyData } from '../components/survey/types';
 import { ruText, kzText } from '../components/survey/texts';
 import { SurveyHeader } from '../components/survey/SurveyHeader';
-import { LoginPrompt } from '../components/survey/LoginPrompt';
 import { SurveyStep } from '../components/survey/SurveyStep';
 import { SurveyFooter } from '../components/survey/SurveyFooter';
 
@@ -20,7 +19,7 @@ const SurveyScreen: React.FC<Props> = ({ navigation }) => {
   const { language } = useLanguage();
   const text = language === 'kz' ? kzText : ruText;
   
-  const [step, setStep] = useState<number>(0);
+  const [step, setStep] = useState<number>(1);
   const [data, setData] = useState<SurveyData>({ language });
   const [touched, setTouched] = useState<Record<number, boolean>>({});
 
@@ -28,16 +27,15 @@ const SurveyScreen: React.FC<Props> = ({ navigation }) => {
     setData((prev: SurveyData) => ({ ...prev, language }));
   }, [language]);
 
-  const totalSteps = 7; // 6 шагов + 1 для логина
+  const totalSteps = 6; // 6 шагов опроса (без логина)
 
   const isStepOptional = (s: number) => {
-    // Все шаги обязательные кроме логина
-    return s === 0;
+    // Все шаги обязательные
+    return false;
   };
 
   const isStepValid = (s: number): boolean => {
     switch (s) {
-      case 0: return true; // Логин промпт - всегда валиден
       case 1: return Boolean(data.name && data.name.trim().length >= 2);
       case 2: return Boolean(data.birthDate);
       case 3: return Boolean(data.gender);
@@ -52,7 +50,7 @@ const SurveyScreen: React.FC<Props> = ({ navigation }) => {
     setTouched((prev) => ({ ...prev, [step]: true }));
     if (!isStepOptional(step) && !isStepValid(step)) return;
     
-    if (step === totalSteps - 1) {
+    if (step === totalSteps) {
       Alert.alert(
         text.title,
         language === 'kz' ? 'Сауалнама аяқталды!' : 'Опрос завершен!',
@@ -65,24 +63,11 @@ const SurveyScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const back = () => {
-    setStep((s) => Math.max(0, s - 1));
+    setStep((s) => Math.max(1, s - 1));
   };
 
-  const handleLogin = () => {
-    navigation.navigate('Auth');
-  };
 
   const renderContent = () => {
-    if (step === 0) {
-      return (
-        <LoginPrompt
-          text={text.loginPrompt}
-          buttonText={text.loginButton}
-          onLogin={handleLogin}
-        />
-      );
-    }
-
     return (
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
@@ -111,7 +96,7 @@ const SurveyScreen: React.FC<Props> = ({ navigation }) => {
         step={step}
         totalSteps={totalSteps}
         onBack={back}
-        canGoBack={step > 0}
+        canGoBack={step > 1}
         language={language}
       />
       
@@ -120,8 +105,8 @@ const SurveyScreen: React.FC<Props> = ({ navigation }) => {
       <SurveyFooter
         onNext={next}
         canGoNext={isStepOptional(step) || isStepValid(step)}
-        isLastStep={step === totalSteps - 1}
-        nextText={step === totalSteps - 1 ? text.finish : (step === 6 ? text.continue : text.next)}
+        isLastStep={step === totalSteps}
+        nextText={step === totalSteps ? text.finish : text.next}
       />
     </ImageBackground>
   );
