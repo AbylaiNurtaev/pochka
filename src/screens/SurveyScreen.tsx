@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView, ImageBackground, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, ImageBackground } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -8,6 +8,7 @@ import { ruText, kzText } from '../components/survey/texts';
 import { SurveyHeader } from '../components/survey/SurveyHeader';
 import { SurveyStep } from '../components/survey/SurveyStep';
 import { SurveyFooter } from '../components/survey/SurveyFooter';
+import KidneyGeneration from '../components/survey/KidneyGeneration';
 
 type SurveyScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Survey'>;
 
@@ -22,16 +23,17 @@ const SurveyScreen: React.FC<Props> = ({ navigation }) => {
   const [step, setStep] = useState<number>(1);
   const [data, setData] = useState<SurveyData>({ language });
   const [touched, setTouched] = useState<Record<number, boolean>>({});
+  const [showKidneyGeneration, setShowKidneyGeneration] = useState(false);
 
   useEffect(() => {
     setData((prev: SurveyData) => ({ ...prev, language }));
   }, [language]);
 
-  const totalSteps = 6; // 6 шагов опроса (без логина)
+  const totalSteps = 10; // 10 шагов опроса (без логина)
 
   const isStepOptional = (s: number) => {
-    // Все шаги обязательные
-    return false;
+    // Шаги 7, 8, 9, 10 необязательные (давление, диагнозы, операции, размеры почек)
+    return s >= 7;
   };
 
   const isStepValid = (s: number): boolean => {
@@ -42,6 +44,10 @@ const SurveyScreen: React.FC<Props> = ({ navigation }) => {
       case 4: return Boolean(data.heightCm && data.heightCm > 40 && data.heightCm < 250);
       case 5: return Boolean(data.weightKg && data.weightKg > 10 && data.weightKg < 400);
       case 6: return true; // BMI информативный
+      case 7: return true; // Давление необязательное
+      case 8: return true; // Диагнозы необязательные
+      case 9: return true; // Операции необязательные
+      case 10: return true; // Размеры почек необязательные
       default: return true;
     }
   };
@@ -51,11 +57,8 @@ const SurveyScreen: React.FC<Props> = ({ navigation }) => {
     if (!isStepOptional(step) && !isStepValid(step)) return;
     
     if (step === totalSteps) {
-      Alert.alert(
-        text.title,
-        language === 'kz' ? 'Сауалнама аяқталды!' : 'Опрос завершен!',
-        [{ text: 'OK', onPress: () => navigation.goBack() }]
-      );
+      // Показываем экран генерации почки
+      setShowKidneyGeneration(true);
       return;
     }
     
@@ -64,6 +67,11 @@ const SurveyScreen: React.FC<Props> = ({ navigation }) => {
 
   const back = () => {
     setStep((s) => Math.max(1, s - 1));
+  };
+
+  const handleGenerationComplete = () => {
+    // Переходим на экран выбора метода входа/регистрации
+    navigation.navigate('AuthMethod');
   };
 
 
@@ -85,6 +93,11 @@ const SurveyScreen: React.FC<Props> = ({ navigation }) => {
       </ScrollView>
     );
   };
+
+  // Если показываем экран генерации почки
+  if (showKidneyGeneration) {
+    return <KidneyGeneration onComplete={handleGenerationComplete} language={language} />;
+  }
 
   return (
     <ImageBackground 
