@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Modal, Pressable } from 'react-native';
 // Предполагаем, что вы используете эту библиотеку для масок
 import { MaskedTextInput } from 'react-native-mask-text'; 
 import Animated, { SlideInRight, SlideOutLeft } from 'react-native-reanimated';
 // Если используете, добавьте иконки (например, react-native-vector-icons)
 import Icon from 'react-native-vector-icons/Ionicons'; 
+import { Picker } from '@react-native-picker/picker';
 import { Language } from '../../contexts/LanguageContext';
 
 // Ваши существующие типы и утилиты
@@ -37,6 +38,7 @@ interface SurveyStepProps {
   touched: Record<number, boolean>;
   isStepOptional: (step: number) => boolean;
   isStepValid: (step: number) => boolean;
+  onNext?: () => void;
 }
 
 export const SurveyStep: React.FC<SurveyStepProps> = ({
@@ -47,8 +49,16 @@ export const SurveyStep: React.FC<SurveyStepProps> = ({
   language,
   touched,
   isStepOptional,
-  isStepValid
+  isStepValid,
+  onNext
 }) => {
+  
+  const [showHeightPicker, setShowHeightPicker] = useState(false);
+  const [showWeightPicker, setShowWeightPicker] = useState(false);
+  const [search, setSearch] = useState('');
+  const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({});
+  const [surgerySearch, setSurgerySearch] = useState('');
+  const [openSurgeryCategories, setOpenSurgeryCategories] = useState<Record<string, boolean>>({});
   
   // Хелпер для определения, нужно ли показывать ошибку
   const shouldShowError = (stepNum: number) => 
@@ -119,7 +129,15 @@ export const SurveyStep: React.FC<SurveyStepProps> = ({
                   isMale && styles.genderButtonActive,
                   shouldShowError(3) && !data.gender && styles.genderButtonError
                 ]}
-                onPress={() => setData({ ...data, gender: 'male' })}
+                onPress={() => {
+                  setData({ ...data, gender: 'male' });
+                  // Автоматический переход на следующий шаг после выбора
+                  setTimeout(() => {
+                    if (onNext) {
+                      onNext();
+                    }
+                  }, 50);
+                }}
               >
                 <MaleIcon active={isMale} />
                 <Text style={[
@@ -135,7 +153,15 @@ export const SurveyStep: React.FC<SurveyStepProps> = ({
                   isFemale && styles.genderButtonActive,
                   shouldShowError(3) && !data.gender && styles.genderButtonError
                 ]}
-                onPress={() => setData({ ...data, gender: 'female' })}
+                onPress={() => {
+                  setData({ ...data, gender: 'female' });
+                  // Автоматический переход на следующий шаг после выбора
+                  setTimeout(() => {
+                    if (onNext) {
+                      onNext();
+                    }
+                  }, 50);
+                }}
               >
                 <FemaleIcon active={isFemale} />
                 <Text style={[
@@ -154,64 +180,116 @@ export const SurveyStep: React.FC<SurveyStepProps> = ({
           </Animated.View>
         );
 
-      case 4: // Рост (Числовая маска с суффиксом " см")
+      case 4: // Рост (Picker в модале)
+        const heightOptions = Array.from({ length: 211 }, (_, i) => i + 40); // 40-250 см
+        
         return (
-          <Animated.View entering={SlideInRight.duration(350)} exiting={SlideOutLeft.duration(250)} style={styles.stepContent}>
-            <Text style={styles.stepTitle}>{text.steps.height} 📏</Text>
-            <View style={styles.inputAffixContainer}>
-                <MaskedTextInput
-                    mask="999" // Максимум 3 цифры (40-250)
-                    keyboardType="numeric"
-                    style={[
-                        styles.input,
-                        styles.inputAffix,
-                        shouldShowError(4) && styles.inputError,
-                        data.heightCm && styles.inputFocused,
-                    ]}
-                    placeholder={text.placeholders.height}
-                    value={data.heightCm?.toString() || ''}
-                    onChangeText={(_, unmasked) => setData({ ...data, heightCm: unmasked ? parseInt(unmasked, 10) : undefined })}
-                    placeholderTextColor="#9CA3AF"
-                    maxLength={3} // Ограничение на 3 цифры
-                />
-                <Text style={styles.affixText}>см</Text>
-            </View>
-            {shouldShowError(4) && (
-              <Text style={styles.errorText}>
-                {language === 'kz' ? 'Бойыңызды 40-250 см аралығында енгізіңіз' : 'Введите рост от 40 до 250 см'}
-              </Text>
-            )}
-          </Animated.View>
+          <>
+            <Animated.View entering={SlideInRight.duration(350)} exiting={SlideOutLeft.duration(250)} style={styles.stepContent}>
+              <Text style={styles.stepTitle}>{text.steps.height} 📏</Text>
+              <TouchableOpacity
+                style={[
+                  styles.pickerButton,
+                  ...(shouldShowError(4) ? [styles.pickerButtonError] : []),
+                  ...(data.heightCm ? [styles.pickerButtonFilled] : []),
+                ]}
+                onPress={() => setShowHeightPicker(true)}
+              >
+                <Text style={[styles.pickerButtonText, ...(data.heightCm ? [styles.pickerButtonTextFilled] : [])]}>
+                  {data.heightCm ? `${data.heightCm} см` : (language === 'kz' ? 'Бойыңызды таңдаңыз' : 'Выберите рост')}
+                </Text>
+                <Icon name="chevron-down" size={24} color={data.heightCm ? '#00A86B' : '#9CA3AF'} />
+              </TouchableOpacity>
+              {shouldShowError(4) && (
+                <Text style={styles.errorText}>
+                  {language === 'kz' ? 'Бойыңызды 40-250 см аралығында енгізіңіз' : 'Введите рост от 40 до 250 см'}
+                </Text>
+              )}
+            </Animated.View>
+            
+            <Modal visible={showHeightPicker} transparent={true} animationType="slide">
+              <Pressable style={styles.modalOverlay} onPress={() => setShowHeightPicker(false)}>
+                <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+                  <View style={styles.modalHeader}>
+                    <Text style={styles.modalTitle}>{text.steps.height}</Text>
+                    <TouchableOpacity onPress={() => setShowHeightPicker(false)} style={styles.modalCloseButton}>
+                      <Icon name="checkmark" size={30} color="#00A86B" />
+                    </TouchableOpacity>
+                  </View>
+                  <Picker
+                    selectedValue={data.heightCm}
+                    onValueChange={(itemValue) => setData({ ...data, heightCm: itemValue as number })}
+                    style={styles.modalPicker}
+                  >
+                    {heightOptions.map((height) => (
+                      <Picker.Item 
+                        key={height} 
+                        label={`${height} см`} 
+                        value={height}
+                        color="#111827"
+                      />
+                    ))}
+                  </Picker>
+                </Pressable>
+              </Pressable>
+            </Modal>
+          </>
         );
 
-      case 5: // Вес (Числовая маска с суффиксом " кг")
+      case 5: // Вес (Picker в модале)
+        const weightOptions = Array.from({ length: 391 }, (_, i) => i + 10); // 10-400 кг
+        
         return (
-          <Animated.View entering={SlideInRight.duration(350)} exiting={SlideOutLeft.duration(250)} style={styles.stepContent}>
-            <Text style={styles.stepTitle}>{text.steps.weight} ⚖️</Text>
-            <View style={styles.inputAffixContainer}>
-                <MaskedTextInput
-                    mask="999" // Максимум 3 цифры (10-400)
-                    keyboardType="numeric"
-                    style={[
-                        styles.input,
-                        styles.inputAffix,
-                        shouldShowError(5) && styles.inputError,
-                        data.weightKg && styles.inputFocused,
-                    ]}
-                    placeholder={text.placeholders.weight}
-                    value={data.weightKg?.toString() || ''}
-                    onChangeText={(_, unmasked) => setData({ ...data, weightKg: unmasked ? parseInt(unmasked, 10) : undefined })}
-                    placeholderTextColor="#9CA3AF"
-                    maxLength={3} // Ограничение на 3 цифры
-                />
-                <Text style={styles.affixText}>кг</Text>
-            </View>
-            {shouldShowError(5) && (
-              <Text style={styles.errorText}>
-                {language === 'kz' ? 'Салмағыңызды 10-400 кг аралығында енгізіңіз' : 'Введите вес от 10 до 400 кг'}
-              </Text>
-            )}
-          </Animated.View>
+          <>
+            <Animated.View entering={SlideInRight.duration(350)} exiting={SlideOutLeft.duration(250)} style={styles.stepContent}>
+              <Text style={styles.stepTitle}>{text.steps.weight} ⚖️</Text>
+              <TouchableOpacity
+                style={[
+                  styles.pickerButton,
+                  ...(shouldShowError(5) ? [styles.pickerButtonError] : []),
+                  ...(data.weightKg ? [styles.pickerButtonFilled] : []),
+                ]}
+                onPress={() => setShowWeightPicker(true)}
+              >
+                <Text style={[styles.pickerButtonText, ...(data.weightKg ? [styles.pickerButtonTextFilled] : [])]}>
+                  {data.weightKg ? `${data.weightKg} кг` : (language === 'kz' ? 'Салмағыңызды таңдаңыз' : 'Выберите вес')}
+                </Text>
+                <Icon name="chevron-down" size={24} color={data.weightKg ? '#00A86B' : '#9CA3AF'} />
+              </TouchableOpacity>
+              {shouldShowError(5) && (
+                <Text style={styles.errorText}>
+                  {language === 'kz' ? 'Салмағыңызды 10-400 кг аралығында енгізіңіз' : 'Введите вес от 10 до 400 кг'}
+                </Text>
+              )}
+            </Animated.View>
+            
+            <Modal visible={showWeightPicker} transparent={true} animationType="slide">
+              <Pressable style={styles.modalOverlay} onPress={() => setShowWeightPicker(false)}>
+                <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+                  <View style={styles.modalHeader}>
+                    <Text style={styles.modalTitle}>{text.steps.weight}</Text>
+                    <TouchableOpacity onPress={() => setShowWeightPicker(false)} style={styles.modalCloseButton}>
+                      <Icon name="checkmark" size={30} color="#00A86B" />
+                    </TouchableOpacity>
+                  </View>
+                  <Picker
+                    selectedValue={data.weightKg}
+                    onValueChange={(itemValue) => setData({ ...data, weightKg: itemValue as number })}
+                    style={styles.modalPicker}
+                  >
+                    {weightOptions.map((weight) => (
+                      <Picker.Item 
+                        key={weight} 
+                        label={`${weight} кг`} 
+                        value={weight}
+                        color="#111827"
+                      />
+                    ))}
+                  </Picker>
+                </Pressable>
+              </Pressable>
+            </Modal>
+          </>
         );
 
       case 6: // BMI результат (Улучшенный дизайн)
@@ -278,9 +356,6 @@ export const SurveyStep: React.FC<SurveyStepProps> = ({
         );
 
       case 8: // Диагнозы
-        const [search, setSearch] = useState('');
-        const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({});
-        
         const filteredCatalog = kidneyDiagnosesCatalog.filter(cat =>
           cat.category.toLowerCase().includes(search.toLowerCase()) ||
           cat.items.some(item => item.toLowerCase().includes(search.toLowerCase()))
@@ -373,9 +448,6 @@ export const SurveyStep: React.FC<SurveyStepProps> = ({
         );
 
       case 9: // Операции
-        const [surgerySearch, setSurgerySearch] = useState('');
-        const [openSurgeryCategories, setOpenSurgeryCategories] = useState<Record<string, boolean>>({});
-        
         const filteredSurgeryCatalog = kidneySurgeryCatalog.filter(cat =>
           cat.category.toLowerCase().includes(surgerySearch.toLowerCase()) ||
           cat.items.some(item => item.toLowerCase().includes(surgerySearch.toLowerCase()))
@@ -842,5 +914,68 @@ const styles = StyleSheet.create({
   },
   kidneyInput: {
     flex: 1,
+  },
+  // --- Picker Button Styles ---
+  pickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    backgroundColor: '#F9FAFB',
+    paddingVertical: 18,
+    paddingHorizontal: 18,
+  },
+  pickerButtonFilled: {
+    borderColor: '#00A86B',
+    backgroundColor: '#FFFFFF',
+  },
+  pickerButtonError: {
+    borderColor: '#EF4444',
+    backgroundColor: '#FEF2F2',
+  },
+  pickerButtonText: {
+    fontSize: 18,
+    color: '#9CA3AF',
+    fontWeight: '500',
+  },
+  pickerButtonTextFilled: {
+    color: '#00A86B',
+  },
+  // --- Modal Styles ---
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 20,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  modalCloseButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: '#F0FDF4',
+  },
+  modalPicker: {
+    height: 200,
   },
 });

@@ -27,7 +27,7 @@ export const kzText: SurveyTexts = {
   gender: { male: 'Ер', female: 'Әйел' },
   placeholders: {
     name: 'Атыңызды енгізіңіз',
-    dob: 'ЖЖЖЖ-АА-КК',
+    dob: 'КК.АА.ЖЖЖЖ',
     phone: '+7 (___) ___-__-__',
     email: 'email@мысал.kz',
     guardian: 'Толтыру міндетті емес',
@@ -74,7 +74,7 @@ export const ruText: SurveyTexts = {
   gender: { male: 'Мужской', female: 'Женский' },
   placeholders: {
     name: 'Введите имя',
-    dob: 'ГГГГ-ММ-ДД',
+    dob: 'ДД.ММ.ГГГГ',
     phone: '+7 (___) ___-__-__',
     email: 'email@пример.ru',
     guardian: 'Можно пропустить',

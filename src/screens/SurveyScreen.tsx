@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView, ImageBackground } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -88,6 +88,7 @@ const SurveyScreen: React.FC<Props> = ({ navigation }) => {
             touched={touched}
             isStepOptional={isStepOptional}
             isStepValid={isStepValid}
+            onNext={next}
           />
         </View>
       </ScrollView>
@@ -100,11 +101,7 @@ const SurveyScreen: React.FC<Props> = ({ navigation }) => {
   }
 
   return (
-    <ImageBackground 
-      source={require('../../assets/splash-icon.png')} 
-      style={styles.container} 
-      imageStyle={styles.bgImg}
-    >
+    <View style={styles.container}>
       <SurveyHeader
         step={step}
         totalSteps={totalSteps}
@@ -121,7 +118,7 @@ const SurveyScreen: React.FC<Props> = ({ navigation }) => {
         isLastStep={step === totalSteps}
         nextText={step === totalSteps ? text.finish : text.next}
       />
-    </ImageBackground>
+    </View>
   );
 };
 
@@ -129,10 +126,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0a0a0a',
-  },
-  bgImg: {
-    opacity: 0.15,
-    resizeMode: 'cover',
   },
   content: {
     flex: 1,

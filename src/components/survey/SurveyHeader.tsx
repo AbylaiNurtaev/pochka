@@ -1,6 +1,11 @@
+// SurveyHeader.tsx
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+// Убираем импорты Animated отсюда, так как вся анимация инкапсулирована
+// import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+
+// Импортируем наш новый компонент
+import { KidneyProgressBar } from './KidneyProgressBar'; // Укажите правильный путь
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -19,15 +24,8 @@ export const SurveyHeader: React.FC<SurveyHeaderProps> = ({
   canGoBack,
   language
 }) => {
-  const progressWidth = useSharedValue(step / totalSteps * 100);
-
-  React.useEffect(() => {
-    progressWidth.value = withTiming(step / totalSteps * 100, { duration: 300 });
-  }, [step]);
-
-  const animatedProgressStyle = useAnimatedStyle(() => ({
-    width: `${progressWidth.value}%`,
-  }));
+  // Рассчитываем прогресс как значение от 0 до 1
+  const progressValue = totalSteps > 0 ? step / totalSteps : 0;
 
   const getProgressText = () => {
     switch (language) {
@@ -53,34 +51,38 @@ export const SurveyHeader: React.FC<SurveyHeaderProps> = ({
           </Text>
         </TouchableOpacity>
         
-        <View style={styles.progressInfo}>
+        {/* Оборачиваем почку и текст в контейнер для центрирования */}
+        <View style={styles.progressContainer}>
+          <KidneyProgressBar progress={progressValue} />
           <Text style={styles.progressText}>{getProgressText()}</Text>
-          <View style={styles.progressPercent}>
-          <Text style={styles.progressPercentText}>
-            {Math.round((step / totalSteps) * 100)}%
-          </Text>
-          </View>
         </View>
+        
+        {/* Пустой View для выравнивания, если кнопка "Назад" занимает место */}
+        <View style={{width: 80}} />
       </View>
       
-      <View style={styles.progressBar}>
-        <Animated.View style={[styles.progressFill, animatedProgressStyle]} />
-      </View>
+      {/* СТАРЫЙ ПРОГРЕСС-БАР УДАЛЕН */}
     </View>
   );
 };
 
+// Стили немного изменены для новой верстки
 const styles = StyleSheet.create({
   container: {
-    paddingTop: 50, // Отступ для камеры времени
+    paddingTop: 50,
     backgroundColor: '#0a0a0a',
+    paddingBottom: 10,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     paddingHorizontal: 20,
     paddingVertical: 15,
+  },
+  progressContainer: { // Новый стиль для центрирования
+    alignItems: 'center',
+    gap: 12,
   },
   backButton: {
     paddingVertical: 10,
@@ -89,6 +91,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
+    marginTop: 5,
   },
   backButtonDisabled: {
     opacity: 0.4,
@@ -101,40 +104,11 @@ const styles = StyleSheet.create({
   backButtonTextDisabled: {
     opacity: 0.6,
   },
-  progressInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
   progressText: {
     color: '#e5e7eb',
     fontSize: 14,
     fontWeight: '500',
+    marginTop: 8,
   },
-  progressPercent: {
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.3)',
-  },
-  progressPercentText: {
-    color: '#10b981',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  progressBar: {
-    height: 6,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    marginHorizontal: 20,
-    marginBottom: 10,
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#00A86B',
-    borderRadius: 3,
-  },
+  // Старые стили progressBar и progressFill больше не нужны
 });
