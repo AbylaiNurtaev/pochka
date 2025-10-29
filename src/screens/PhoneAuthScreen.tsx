@@ -30,9 +30,10 @@ export default function PhoneAuthScreen({ navigation }: Props) {
       // Показываем экран ввода кода
       setShowCodeInput(true);
     } else {
-      // Проверяем код и переходим дальше
+      // Проверяем код и переходим на главную страницу
       console.log('Code entered:', code.join(''));
       // TODO: Здесь будет логика проверки кода
+      navigation.navigate('Main');
     }
   };
 

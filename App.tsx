@@ -13,6 +13,7 @@ import EmailAuthScreen from './src/screens/EmailAuthScreen';
 import AuthScreen from './src/screens/AuthScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import SurveyScreen from './src/screens/SurveyScreen';
+import TabNavigator from './src/navigation/TabNavigator';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -31,6 +32,7 @@ export default function App() {
           <Stack.Screen name="Auth" component={AuthScreen} />
           <Stack.Screen name="Register" component={RegisterScreen} />
           <Stack.Screen name="Survey" component={SurveyScreen} />
+          <Stack.Screen name="Main" component={TabNavigator} />
         </Stack.Navigator>
       </NavigationContainer>
     </LanguageProvider>

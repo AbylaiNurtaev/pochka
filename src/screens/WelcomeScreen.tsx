@@ -59,7 +59,7 @@ export default function WelcomeScreen({ navigation }: Props) {
   const handleContinue = () => {
     if (!isAgreed) return;
     scale.value = withSpring(0.95, {}, () => { scale.value = withSpring(1); });
-    navigation.navigate('Survey');
+    navigation.navigate('Main');
   };
 
   const handleCheckboxPress = () => {

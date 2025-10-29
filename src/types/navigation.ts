@@ -8,4 +8,12 @@ export type RootStackParamList = {
   Auth: undefined;
   Register: undefined;
   Survey: undefined;
+  Main: undefined;
+};
+
+export type TabParamList = {
+  Home: undefined;
+  Statistics: undefined;
+  Analytics: undefined;
+  Profile: undefined;
 };
